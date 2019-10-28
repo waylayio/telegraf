@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/influxdata/telegraf"
+	"github.com/jeremywohl/flatten"
 )
 
 type serializer struct {
@@ -53,7 +54,11 @@ func (s *serializer) createObject(metric telegraf.Metric) map[string]interface{}
 	m["fields"] = metric.Fields()
 	m["name"] = metric.Name()
 	m["timestamp"] = metric.Time().UnixNano() / int64(s.TimestampUnits)
-	return m
+        flat, err := flatten.Flatten(m, "", flatten.DotStyle)
+	if err != nil {
+                return m
+        }	
+	return flat
 }
 
 func truncateDuration(units time.Duration) time.Duration {
