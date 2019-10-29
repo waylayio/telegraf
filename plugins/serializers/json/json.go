@@ -49,20 +49,27 @@ func (s *serializer) SerializeBatch(metrics []telegraf.Metric) ([]byte, error) {
 }
 
 func (s *serializer) createObject(metric telegraf.Metric) map[string]interface{} {
-        m := make(map[string]interface{}, 4)
-        //m["tags"] = metric.Tags()
-        for k,v := range metric.Tags() {
-                m["tag." + k] = v
-        }
-        m["fields"] = metric.Fields()
-        m["name"] = metric.Name()
-        m["timestamp"] = metric.Time().UnixNano() / int64(s.TimestampUnits)
-        flat, err := flatten.Flatten(m, "", flatten.DotStyle)
-        if err != nil {
-                m["err"] = err
-                return m
-        }
-        return flat
+	m := make(map[string]interface{}, 4)
+
+	//m["tags"] = metric.Tags()
+
+	for k, v := range metric.Tags() {
+		if k == "resource" {
+			m["resource"] = v
+		} else {
+			m["tag."+k] = v
+		}
+	}
+
+	m["fields"] = metric.Fields()
+	m["name"] = metric.Name()
+	m["timestamp"] = metric.Time().UnixNano() / int64(s.TimestampUnits)
+	flat, err := flatten.Flatten(m, "", flatten.DotStyle)
+	if err != nil {
+		m["err"] = err
+		return m
+	}
+	return flat
 }
 func truncateDuration(units time.Duration) time.Duration {
 	// Default precision is 1s
