@@ -37,11 +37,11 @@ func (s *serializer) SerializeBatch(metrics []telegraf.Metric) ([]byte, error) {
 		objects = append(objects, m)
 	}
 
-	obj := map[string]interface{}{
-		"metrics": objects,
-	}
+	//obj := map[string]interface{}{
+	//	"metrics": objects,
+	//}
 
-	serialized, err := json.Marshal(obj)
+	serialized, err := json.Marshal(objects)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -57,19 +57,28 @@ func (s *serializer) createObject(metric telegraf.Metric) map[string]interface{}
 		if k == "resource" {
 			m["resource"] = v
 		} else {
-			m["tag."+k] = v
+	//		m["tag."+k] = v
 		}
 	}
 
-	m["fields"] = metric.Fields()
-	m["name"] = metric.Name()
+	//m["fields"] = metric.Fields()
+
+        for k, v := range metric.Fields() {
+               if k == "value" {
+		      m[metric.Name()] = v
+	       }
+	
+	//m["name"] = metric.Name()
+	
 	m["timestamp"] = metric.Time().UnixNano() / int64(s.TimestampUnits)
-	flat, err := flatten.Flatten(m, "", flatten.DotStyle)
-	if err != nil {
-		m["err"] = err
-		return m
-	}
-	return flat
+	
+	//flat, err := flatten.Flatten(m, "", flatten.DotStyle)
+	//if err != nil {
+	//	m["err"] = err
+	//	return m
+	//}
+	
+	return m
 }
 func truncateDuration(units time.Duration) time.Duration {
 	// Default precision is 1s
